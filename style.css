@@ -1,0 +1,18 @@
+.color-div-container {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    justify-content: space-around;
+    text-align: center;
+    flex-wrap: nowrap;
+}
+
+.color-div {
+    height: 150px;
+    flex: 1;
+    margin: 5px;
+}
+
+.speaker-target {
+    border: 5px solid black;
+}

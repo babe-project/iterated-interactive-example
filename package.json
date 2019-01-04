@@ -1,0 +1,15 @@
+{
+    "name": "iteratedexperiment",
+    "version": "1.0.0",
+    "description": "Example of an iterated experiment",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "author": "Xiang Ji",
+    "license": "ISC",
+    "dependencies": {
+        "babe-project": "0.0.25",
+        "phoenix": "^1.4.0"
+    }
+}
