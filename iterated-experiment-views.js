@@ -67,6 +67,7 @@ const iteratedExperimentViews = {
                         babe.variant = payload.variant;
                         babe.chain = payload.chain;
                         babe.realization = payload.realization;
+                        console.log(`variant: ${babe.variant}, chain: ${babe.chain}, realization: ${babe.realization}`);
                         // Proceed to the next view if the connection to the participant channel was successfully established.
                         babe.findNextView();
                     }
@@ -92,7 +93,7 @@ const iteratedExperimentViews = {
         return _init;
     },
     iteratedExperimentLobby: function(config) {
-        const _lobby = {
+        const _lobby_iterated = {
             name: config.name,
             title: config.title,
             text: config.text || "Connecting to the server...",
@@ -159,8 +160,156 @@ const iteratedExperimentViews = {
             trials: config.trials
         };
 
-        return _lobby;
+        return _lobby_iterated;
     },
+    interactiveExperimentLobby: function(config) {
+        const _lobby_interactive = {
+            name: config.name,
+            title: config.title,
+            text: config.text || "Connecting to the server...",
+            render: function(CT, babe) {
+                const viewTemplate = `
+                    <div class="babe-view">
+                        <h1 class="babe-view-title">${this.title}</h1>
+                        <section class="babe-text-container">
+                            <p id="lobby-text" class="babe-view-text">${
+                                this.text
+                            }</p>
+                        </section>
+                    </div>
+                `;
+
+                $("#main").html(viewTemplate);
+
+                babe.trial_counter = 0;
+
+                // This channel will be used for all subsequent group communications in this one experiment.
+                babe.gameChannel = babe.socket.channel(
+                    `interactive_room:${babe.deploy.experimentID}:${
+                        babe.chain
+                    }:${babe.realization}`,
+                    { participant_id: babe.participant_id }
+                );
+
+                // We don't really need to track the presence on the client side for now.
+                // babe.lobbyPresence = new Phoenix.Presence(babe.gameChannel);
+
+                babe.gameChannel
+                    .join()
+                    .receive("ok", (msg) => {
+                        document.getElementById("lobby-text").innerHTML =
+                            "Successfully joined the lobby. Waiting for other participants...";
+                    })
+                    .receive("error", (reasons) => {
+                        babe.onSocketError(reasons);
+                    })
+                    .receive("timeout", () => {
+                        babe.onSocketTimeout();
+                    });
+
+
+                let saveTrialData = function(prev_round_trial_data) {
+                    // These could be different for each participant, thus they fill them in before recording them.
+                    prev_round_trial_data["variant"] = babe.variant;
+                    prev_round_trial_data["chain"] = babe.chain;
+                    prev_round_trial_data["realization"] = babe.realization;
+
+                    babe.trial_data.push(prev_round_trial_data);
+                };
+
+                // When the server tells the participant it's time to start the game with the "start_game" message (e.g. when there are enough participants for the game already for this game), the client side JS does the preparation work (e.g. initialize the UI)
+                // The payload contains two pieces of information: `lounge_id` and `nth_participant`, which indicates the rank of the current participant among all participants for this game.
+                babe.gameChannel.on("start_game", (payload) => {
+                    // Set a global state noting that the experiment hasn't finished yet.
+                    babe.gameFinished = false;
+
+                    // Add a callback to handle situations where one of the participants leaves in the middle of the experiment.
+                    babe.gameChannel.on("presence_diff", (payload) => {
+                        if (babe.gameFinished == false) {
+                            window.alert(
+                                "Sorry. Somebody just left this interactive experiment halfway through and thus it can't be finished! Please contact us to still be reimbursed for your time."
+                            );
+                            // TODO: Figure out what exactly to do when this happens.
+                            // We might not want to submit the results. If we submit, we'd also need to make sure that the participant who dropped out's ExperimentStatus is also marked as "completed" correctly.
+                            // babe.submission = colorReferenceUtils.babeSubmitWithSocket(
+                            //     babe
+                            // );
+                            // babe.submission.submit(babe);
+                        }
+                    });
+
+                    // One of the participants need to generate and send the data for the very first round.
+                    if (babe.variant == 2) {
+                        babe.gameChannel.push("initialize_game", {                       
+                        });
+                    }
+                });
+
+                // Display the message received from the server upon `new_msg` event.
+                babe.gameChannel.on("new_msg", (payload) => {
+                    let chatBox = document.querySelector("#chat-box");
+                    let msgBlock = document.createElement("p");
+                    msgBlock.classList.add("babe-view-text");
+                    msgBlock.insertAdjacentHTML(
+                        "beforeend",
+                        `${payload.message}`
+                    );
+                    chatBox.appendChild(msgBlock);
+                    babe.conversation.push(payload.message);
+                    
+                    // Only the listener can select a response apparently.
+                    if (babe.variant == 2) {
+                        // The problem is that the CT cannot be properly obtained from the arguments because this view is not the actual game view.
+                        babe.trial_counter += 1;
+
+                                if (babe.trial_counter > 6) {
+                                // Note that we can only record the reaction time of the guy who actively ended this round. Other interactive experiments might have different requirements though.
+                                const RT = Date.now() - babe.startingTime;
+                                const trial_data = {
+                                    trial_type: config.trial_type,
+                                    trial_number: babe.trial_counter,
+                                    // Better put them into one single string.
+                                    conversation: babe.conversation.join("\n"),
+                                    RT: RT
+                                    };
+                                    babe.gameChannel.push("end_game", {
+                                        prev_round_trial_data: trial_data
+                                    });
+                                } 
+                            };
+                });
+
+                // Things to do on initialize_game, next_round and end_game are slightly different.
+                // Another way is to tell them apart via some payload content. But the following way also works.
+                babe.gameChannel.on("initialize_game", (payload) => {
+                    // We run findNextView() to advance to the next round.
+                    babe.findNextView();
+
+                });
+
+                // Get information regarding the next round and do the corresponding work.
+                babe.gameChannel.on("next_round", (payload) => {
+                    saveTrialData(payload.prev_round_trial_data);
+
+                    // We run findNextView() to advance to the next round.
+                    babe.findNextView();
+
+                });
+
+                // Only save the data and do nothing else
+                babe.gameChannel.on("end_game", (payload) => {
+                    babe.gameFinished = true;
+                    saveTrialData(payload.prev_round_trial_data);
+
+                    babe.findNextView();
+                });
+            },
+            CT: 0,
+            trials: config.trials
+        };
+
+        return _lobby_interactive;
+}, 
 
     trialView: function(config) {
         const _trial = {
@@ -182,6 +331,8 @@ const iteratedExperimentViews = {
                                 </p>
                                 <p id="text-last-iteration" class="babe-view-text">                               
                                 </p>
+                            <div id="chat-box"></div>
+
                             <div class="babe-view-answer-container">
                                 <textarea name="textbox-input" id="text-this-iteration" class='babe-response-text' cols="50" rows="20"></textarea>
                             </div>
@@ -193,6 +344,8 @@ const iteratedExperimentViews = {
                 `;
 
                 $("#main").html(viewTemplate);
+                
+                babe.num_game_trials = config.trials;
 
                 if (babe.realization == 1) {
                     $("#text-description").hide();
@@ -205,6 +358,8 @@ const iteratedExperimentViews = {
                         "text-last-iteration"
                     ).innerText = prevText;
                 }
+                
+                babe.conversation = [];
 
                 let next = $("#next");
                 let textInput = $("textarea");
@@ -216,9 +371,12 @@ const iteratedExperimentViews = {
                         response: textInput.val().trim(),
                         RT: RT
                     };
+                    babe.gameChannel.push("new_msg", {
+                           message: `${babe.variant}: ${trial_data.response}`
+                    });
 
-                    babe.trial_data.push(trial_data);
-                    babe.findNextView();
+                    //babe.trial_data.push(trial_data);
+                    //babe.findNextView();
                 });
                 startingTime = Date.now();
             },

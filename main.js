@@ -10,7 +10,7 @@ $("document").ready(function() {
 
     babeInit({
         // views_seq: [init, intro, instructions, lobby, game, thanks],
-        views_seq: [init, intro, instructions, lobby, trial, thanks],
+        views_seq: [init, intro, instructions, lobby_iterated, lobby_interactive, trial, thanks],
         deploy: {
             experimentID: "51",
             // experimentID: "15",

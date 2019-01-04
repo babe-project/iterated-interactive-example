@@ -20,7 +20,7 @@ const intro = babeViews.intro({
     trials: 1,
     title: "Welcome!",
     text:
-        'This is an example of an interactive experiment with _babe. More information can be found <a href="https://babe-project.github.io/babe_site/">here</a>.',
+        'This is an example of an iterated-interactive experiment with _babe. More information can be found <a href="https://babe-project.github.io/babe_site/">here</a>.',
     buttonText: "Begin Experiment"
 });
 
@@ -29,21 +29,28 @@ const instructions = babeViews.instructions({
     name: "instructions",
     title: "General Instructions",
     text: `
-    This is a demo of an iterated experiment. There are 3 chains in total, with 20 realizations per chain. (There's only one "variant".) The participant assigned the tuple &lt;variant-nr, chain-nr, realization-nr&gt; must wait for information to come from the participant &lt;variant-nr, chain-nr, realization-nr - 1&gt;.
+    This is a demo of an iterated-interactive experiment. There are 2 variants (speaker A and speaker B), 3 chains in total, with 10 realizations per chain. The participants assigned the tuple &lt;X, chain-nr, realization-nr&gt; must wait for information to come from the participants &lt;X, chain-nr, realization-nr - 1&gt;.
 
     <br>
     <br>
 
-    The participant will first go into a lobby. If an opening is available, they will start the task immediately. Otherwise, they will wait until a previous participant has finished the task, by which point they will be notified and start the task.
+    The participant will first go into a lobby. If an opening is available and there is another participant, they will start the task immediately. Otherwise, they will wait until previous participants have finished the task, by which point they will be notified and start the task.
     `,
     buttonText: "To the Lobby"
 });
 
-const lobby = iteratedExperimentViews.iteratedExperimentLobby({
+const lobby_iterated = iteratedExperimentViews.iteratedExperimentLobby({
     name: "lobby",
     trials: 1,
-    title: "Lobby",
+    title: "Lobby_iterated",
     text: "Connecting to the server..."
+});
+
+const lobby_interactive = iteratedExperimentViews.interactiveExperimentLobby({
+    name: "lobby",
+    trials: 1,
+    title: "Lobby_interactive",
+    text: "Waiting for other participants"
 });
 
 const trial = iteratedExperimentViews.trialView({
