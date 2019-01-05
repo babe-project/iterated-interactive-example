@@ -59,6 +59,24 @@ const trial = iteratedExperimentViews.trialView({
     title: "Demo trial"
 });
 
+const pos_test_view = babeViews.postTest({
+    trials: 1,
+    name: 'post_test',
+    title: 'Weitere Angaben',
+    text: 'Die Beantwortung der folgenden Fragen ist optional, aber es kann bei der Auswirkung hilfreich sein, damit wir Ihre Antowrten besser verstehen.',
+    buttonText: 'Weiter',
+    age_question: 'Alter',
+    gender_question: 'Geschlecht',
+    gender_male: 'männlich',
+    gender_female: 'weiblich',
+    edu_question: 'Höchster Bildungsabschluss',
+    edu_graduated_high_school: 'Abitur',
+    edu_graduated_college: 'Hochschulabschluss',
+    edu_higher_degree: 'Universitärer Abschluss',
+    languages_question: 'Muttersprache',
+    languages_more: '(in der Regel die Sprache, die Sie als Kind zu Hause gesprochen haben)',
+    comments_question: 'Weitere Kommentare'
+});
 // submits the results
 const thanks = iteratedExperimentViews.thanksWithSocket({
     trials: 1,

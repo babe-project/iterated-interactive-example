@@ -114,7 +114,7 @@ const iteratedExperimentUtils = {
                         }
                     });
             } else {
-                const flattenedData = flattenData(data);
+                const flattenedData = data;
                 jQuery("<div/>", {
                     class: "babe-debug-results",
                     html: formatDebugData(flattenedData)
@@ -231,6 +231,7 @@ const iteratedExperimentUtils = {
         };
 
         const flattenData = function(data) {
+            console.log(data);
             var trials = data.trials;
             delete data.trials;
 

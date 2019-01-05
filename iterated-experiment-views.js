@@ -140,7 +140,7 @@ const iteratedExperimentViews = {
                             document.getElementById(
                                 "lobby-text"
                             ).innerHTML = `<p class="babe-view-text">Successfully joined the lobby. Waiting for the server...</p>
-                                
+
                                 <p class="babe-view-text">Assignment trituple: &lt;variant: ${
                                     babe.variant
                                 }, chain: ${babe.chain}, realization: ${
@@ -240,7 +240,7 @@ const iteratedExperimentViews = {
 
                     // One of the participants need to generate and send the data for the very first round.
                     if (babe.variant == 2) {
-                        babe.gameChannel.push("initialize_game", {                       
+                        babe.gameChannel.push("initialize_game", {
                         });
                     }
                 });
@@ -256,7 +256,7 @@ const iteratedExperimentViews = {
                     );
                     chatBox.appendChild(msgBlock);
                     babe.conversation.push(payload.message);
-                    
+
                     // Only the listener can select a response apparently.
                     if (babe.variant == 2) {
                         // The problem is that the CT cannot be properly obtained from the arguments because this view is not the actual game view.
@@ -275,22 +275,13 @@ const iteratedExperimentViews = {
                                     babe.gameChannel.push("end_game", {
                                         prev_round_trial_data: trial_data
                                     });
-                                } 
+                                }
                             };
                 });
 
                 // Things to do on initialize_game, next_round and end_game are slightly different.
                 // Another way is to tell them apart via some payload content. But the following way also works.
                 babe.gameChannel.on("initialize_game", (payload) => {
-                    // We run findNextView() to advance to the next round.
-                    babe.findNextView();
-
-                });
-
-                // Get information regarding the next round and do the corresponding work.
-                babe.gameChannel.on("next_round", (payload) => {
-                    saveTrialData(payload.prev_round_trial_data);
-
                     // We run findNextView() to advance to the next round.
                     babe.findNextView();
 
@@ -309,7 +300,7 @@ const iteratedExperimentViews = {
         };
 
         return _lobby_interactive;
-}, 
+},
 
     trialView: function(config) {
         const _trial = {
@@ -329,7 +320,7 @@ const iteratedExperimentViews = {
                                 <p id="text-description" class="babe-view-text">
                                     The following is what the participant of the same chain in the last iteration wrote:
                                 </p>
-                                <p id="text-last-iteration" class="babe-view-text">                               
+                                <p id="text-last-iteration" class="babe-view-text">
                                 </p>
                             <div id="chat-box"></div>
 
@@ -344,7 +335,7 @@ const iteratedExperimentViews = {
                 `;
 
                 $("#main").html(viewTemplate);
-                
+
                 babe.num_game_trials = config.trials;
 
                 if (babe.realization == 1) {
@@ -353,12 +344,12 @@ const iteratedExperimentViews = {
                         This is the first iteration. Write whatever you want here.
                     `;
                 } else {
-                    let prevText = babe.lastIterationResults[0]["response"];
+                    let prevText = babe.lastIterationResults[0]["conversation"];
                     document.getElementById(
                         "text-last-iteration"
                     ).innerText = prevText;
                 }
-                
+
                 babe.conversation = [];
 
                 let next = $("#next");
