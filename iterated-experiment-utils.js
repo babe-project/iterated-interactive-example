@@ -1,6 +1,5 @@
 /* Helper functions */
-/* For generating random colors */
-// From Dawkins' code.
+
 const iteratedExperimentUtils = {
     // generateId :: Integer -> String
     generateId: function(len) {

@@ -11,9 +11,9 @@ $("document").ready(function() {
     babeInit({
         // views_seq: [init, intro, instructions, lobby, game, thanks],
         // views_seq: [init, intro, instructions, lobby_iterated, lobby_interactive, trial, pos_test_view, thanks],
-        views_seq: [init, intro, instructions, lobby_iterated, lobby_interactive, dialogue, trial, thanks],
+        views_seq: [intro, instructions, init, lobby_iterated, lobby_interactive, dialogue, trial, thanks],
         deploy: {
-            experimentID: "57",
+            experimentID: "58",
             // experimentID: "15",
             serverAppURL:
                 "https://babe-demo.herokuapp.com/api/submit_experiment/",
@@ -26,7 +26,7 @@ $("document").ready(function() {
                 "https://app.prolific.ac/submissions/complete?cc=EXAMPLE1234"
         },
         progress_bar: {
-            in: ["forcedChoice"],
+            in: ["trial"],
             style: "default",
             width: 100
         }

@@ -29,12 +29,17 @@ const instructions = babeViews.instructions({
     name: "instructions",
     title: "General Instructions",
     text: `
-    This is a demo of an iterated-interactive experiment. There are 2 variants (speaker A and speaker B), 3 chains in total, with 10 realizations per chain. The participants assigned the tuple &lt;X, chain-nr, realization-nr&gt; must wait for information to come from the participants &lt;X, chain-nr, realization-nr - 1&gt;.
+    This is a demo of an iterated-interactive experiment. There are 2 variants (speaker 1 and speaker 2), 2 chains in total, with 10 realizations per chain. The participants assigned the tuple &lt;X, chain-nr, realization-nr&gt; must wait for information to come from the participants &lt;X, chain-nr, realization-nr - 1&gt;.
 
     <br>
     <br>
 
-    The participant will first go into a lobby. If an opening is available and there is another participant, they will start the task immediately. Otherwise, they will wait until previous participants have finished the task, by which point they will be notified and start the task.
+    The participant will first go into a lobby. If an opening is available and there is another participant, they will start the task immediately. Otherwise, they will wait until previous participants have finished the task and/or another participant has joined, by which point they will be notified and start the task.
+
+    <br>
+    <br>
+
+    The task is to read a dialogue and to recreate it.
     `,
     buttonText: "To the Lobby"
 });
@@ -63,7 +68,7 @@ const dialogue = iteratedExperimentViews.dialogueView({
     Afterwards you will have to recreate the dialogue together with another participant.
     `,
     text:`
-    1: Hallo
+    1: Hello
     2: How are you?
     1: Fine
     2: Bye

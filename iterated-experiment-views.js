@@ -182,8 +182,6 @@ const iteratedExperimentViews = {
 
                 $("#main").html(viewTemplate);
 
-                babe.trial_counter = 0;
-
                 // This channel will be used for all subsequent group communications in this one experiment.
                 babe.gameChannel = babe.socket.channel(
                     `interactive_room:${babe.deploy.experimentID}:${
@@ -256,8 +254,7 @@ const iteratedExperimentViews = {
 
                 });
 
-                // Things to do on initialize_game, next_round and end_game are slightly different.
-                // Another way is to tell them apart via some payload content. But the following way also works.
+                // Wait until both participants are ready (have read the dialogue)
                 let player_ready_count = 0;
                 babe.gameChannel.on("initialize_game", (payload) => {
                     player_ready_count = player_ready_count + 1;
@@ -281,7 +278,6 @@ const iteratedExperimentViews = {
 
         return _lobby_interactive;
     },
-
     dialogueView: function(config) {
         const _dialogue = {
             name: config.name,
@@ -293,7 +289,7 @@ const iteratedExperimentViews = {
                 const viewTemplate = `<div class="babe-view">
                     <h1 class='babe-view-title'>${this.title}</h1>
                     <section class="babe-text-container">
-                        <p class='babe-view-text'>${this.instructions} You are participant: ${babe.variant}</p>
+                        <p class='babe-view-text'>${this.instructions} <br> You are speaker: ${babe.variant}</p>
                         <br>
                         <pre class="babe-view-text">${(babe.realization == 1) ? this.text : babe.lastIterationResults[0]["conversation"]}</pre>
                     </section>
@@ -304,7 +300,8 @@ const iteratedExperimentViews = {
 
                 $("#main").html(viewTemplate);
 
-                // moves to the next view
+                // Send the "initialize_game"-game message to tell that this participant is ready
+                // Also disables the "next"-button and tells the user why
                 $("#next").on("click", function(e) {
                       $("#next").text("Waiting for the other participant");
                       $("#next").attr("disabled", "disabled");
@@ -318,8 +315,6 @@ const iteratedExperimentViews = {
 
         return _dialogue;
     },
-
-
     trialView: function(config) {
         const _trial = {
             name: config.name,
@@ -330,25 +325,24 @@ const iteratedExperimentViews = {
                 const viewTemplate = `
                         <p class="babe-view">
                             <h1 class="babe-view-title">${this.title}</h1>
-                                <p class="babe-view-text">Assignment trituple: <strong> &lt;variant: ${
+                                <p class="babe-view-text"><strong> Speaker: ${
                                     babe.variant
-                                } </strong>, chain: ${babe.chain}, realization: ${
-                    babe.realization
-                }&gt;</p>
+                                } </strong>
+                                </p>
                                 <p id="text-description" class="babe-view-text">
                                     The following is your dialogue:
                                 </p>
-                                <p id="text-last-iteration" class="babe-view-text">
+                                <br>
+                                <p id="text-current-iteration" class="babe-view-text">
                                 </p>
                             <div id="chat-box"></div>
 
+                            <p class="babe-view-text">
+                                Write something before you click "send" or press "enter". It will be shown to the other participant.
+                                If you think you have recreated the complete dialogue, click "end dialogue".
+                            </p>
                             <div class="babe-view-answer-container">
-                                <textarea name="textbox-input" id="text-this-iteration" class='babe-response-text' cols="50" rows="3" minlength="1"></textarea>
-
-                                <p class="babe-view-text">
-                                    Write something before you click "send". It will be shown to the other participant.
-                                    If you think you have recreated the complete dialogue, click "end dialogue".
-                                </p>
+                                <textarea name="textbox-input" id="text-this-iteration" class='babe-response-text' cols="50" rows="3"></textarea>
                                 <button id='end' class='babe-response-buttons'>end dialogue</button>
                                 <button id='next' class='babe-response-buttons'>send</button>
                               </div>
@@ -356,26 +350,39 @@ const iteratedExperimentViews = {
                 `;
 
                 $("#main").html(viewTemplate);
-
+                // Save the conversation here
                 babe.conversation = [];
 
+                // Try to send the typed message, when the user clicks on next or presses enter
                 let next = $("#next");
                 let textInput = $("textarea");
                 next.on("click", function() {
-                    babe.gameChannel.push("new_msg", {
-                           message: `${babe.variant}: ${textInput.val().trim()}`
-                    });
+                    send_new_message();
                 });
-
+                textInput.on("keydown", function(e) {
+                    if(e.keyCode == 13) {
+                        send_new_message();
+                    };
+                });
+                // Only send none empty messages and clear the textarea afterwards
+                let send_new_message = function() {
+                    if(textInput.val().length > 0){
+                        babe.gameChannel.push("new_msg", {
+                               message: `${babe.variant}: ${textInput.val().trim()}`
+                        });
+                        textInput.val('');
+                    };
+                };
+                // End the dialogue, if a user presses on the end button
                 let end = $("#end");
                 end.on("click", function() {
                   // Note that we can only record the reaction time of the guy who actively ended this round. Other interactive experiments might have different requirements though.
                   const RT = Date.now() - startingTime;
                   const trial_data = {
-                      trial_type: config.trial_type,
                       trial_number: CT + 1,
                       // Better put them into one single string.
                       conversation: babe.conversation.join("\n"),
+                      clicked_on_end: babe.variant,
                       RT: RT
                       };
                       babe.gameChannel.push("end_game", {
@@ -389,7 +396,6 @@ const iteratedExperimentViews = {
         };
         return _trial;
     },
-
     thanksWithSocket: function(config) {
         const _thanks = {
             name: config.name,
