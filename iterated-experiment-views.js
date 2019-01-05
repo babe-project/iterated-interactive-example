@@ -167,6 +167,7 @@ const iteratedExperimentViews = {
             name: config.name,
             title: config.title,
             text: config.text || "Connecting to the server...",
+            number_players: config.number_players,
             render: function(CT, babe) {
                 const viewTemplate = `
                     <div class="babe-view">
@@ -238,11 +239,7 @@ const iteratedExperimentViews = {
                         }
                     });
 
-                    // One of the participants need to generate and send the data for the very first round.
-                    if (babe.variant == 2) {
-                        babe.gameChannel.push("initialize_game", {
-                        });
-                    }
+                    babe.findNextView();
                 });
 
                 // Display the message received from the server upon `new_msg` event.
@@ -257,34 +254,17 @@ const iteratedExperimentViews = {
                     chatBox.appendChild(msgBlock);
                     babe.conversation.push(payload.message);
 
-                    // Only the listener can select a response apparently.
-                    if (babe.variant == 2) {
-                        // The problem is that the CT cannot be properly obtained from the arguments because this view is not the actual game view.
-                        babe.trial_counter += 1;
-
-                                if (babe.trial_counter > 6) {
-                                // Note that we can only record the reaction time of the guy who actively ended this round. Other interactive experiments might have different requirements though.
-                                const RT = Date.now() - babe.startingTime;
-                                const trial_data = {
-                                    trial_type: config.trial_type,
-                                    trial_number: babe.trial_counter,
-                                    // Better put them into one single string.
-                                    conversation: babe.conversation.join("\n"),
-                                    RT: RT
-                                    };
-                                    babe.gameChannel.push("end_game", {
-                                        prev_round_trial_data: trial_data
-                                    });
-                                }
-                            };
                 });
 
                 // Things to do on initialize_game, next_round and end_game are slightly different.
                 // Another way is to tell them apart via some payload content. But the following way also works.
+                let player_ready_count = 0;
                 babe.gameChannel.on("initialize_game", (payload) => {
+                    player_ready_count = player_ready_count + 1;
                     // We run findNextView() to advance to the next round.
-                    babe.findNextView();
-
+                    if(player_ready_count == this.number_players){
+                        babe.findNextView();
+                    }
                 });
 
                 // Only save the data and do nothing else
@@ -300,7 +280,45 @@ const iteratedExperimentViews = {
         };
 
         return _lobby_interactive;
-},
+    },
+
+    dialogueView: function(config) {
+        const _dialogue = {
+            name: config.name,
+            title: babeUtils.view.setter.title(config.title, "Instructions"),
+            instructions: config.instructions,
+            text: config.text,
+            button: babeUtils.view.setter.buttonText(config.buttonText),
+            render: function(CT, babe) {
+                const viewTemplate = `<div class="babe-view">
+                    <h1 class='babe-view-title'>${this.title}</h1>
+                    <section class="babe-text-container">
+                        <p class='babe-view-text'>${this.instructions} You are participant: ${babe.variant}</p>
+                        <br>
+                        <pre class="babe-view-text">${(babe.realization == 1) ? this.text : babe.lastIterationResults[0]["conversation"]}</pre>
+                    </section>
+                    <button id="next" class='babe-view-button'>${
+                        this.button
+                    }</button>
+                </div>`;
+
+                $("#main").html(viewTemplate);
+
+                // moves to the next view
+                $("#next").on("click", function(e) {
+                      $("#next").text("Waiting for the other participant");
+                      $("#next").attr("disabled", "disabled");
+                      babe.gameChannel.push("initialize_game", {
+                      });
+                });
+            },
+            CT: 0,
+            trials: config.trials
+        };
+
+        return _dialogue;
+    },
+
 
     trialView: function(config) {
         const _trial = {
@@ -312,62 +330,57 @@ const iteratedExperimentViews = {
                 const viewTemplate = `
                         <p class="babe-view">
                             <h1 class="babe-view-title">${this.title}</h1>
-                                <p class="babe-view-text">Assignment trituple: &lt;variant: ${
+                                <p class="babe-view-text">Assignment trituple: <strong> &lt;variant: ${
                                     babe.variant
-                                }, chain: ${babe.chain}, realization: ${
+                                } </strong>, chain: ${babe.chain}, realization: ${
                     babe.realization
                 }&gt;</p>
                                 <p id="text-description" class="babe-view-text">
-                                    The following is what the participant of the same chain in the last iteration wrote:
+                                    The following is your dialogue:
                                 </p>
                                 <p id="text-last-iteration" class="babe-view-text">
                                 </p>
                             <div id="chat-box"></div>
 
                             <div class="babe-view-answer-container">
-                                <textarea name="textbox-input" id="text-this-iteration" class='babe-response-text' cols="50" rows="20"></textarea>
-                            </div>
+                                <textarea name="textbox-input" id="text-this-iteration" class='babe-response-text' cols="50" rows="3" minlength="1"></textarea>
+
                                 <p class="babe-view-text">
-                                    Write something before you click "next". It will be shown to the participant of the same chain in the next iteration.
+                                    Write something before you click "send". It will be shown to the other participant.
+                                    If you think you have recreated the complete dialogue, click "end dialogue".
                                 </p>
-                            <button id='next' class='babe-view-button'>next</button>
+                                <button id='end' class='babe-response-buttons'>end dialogue</button>
+                                <button id='next' class='babe-response-buttons'>send</button>
+                              </div>
                         </div>
                 `;
 
                 $("#main").html(viewTemplate);
-
-                babe.num_game_trials = config.trials;
-
-                if (babe.realization == 1) {
-                    $("#text-description").hide();
-                    document.getElementById("text-last-iteration").innerText = `
-                        This is the first iteration. Write whatever you want here.
-                    `;
-                } else {
-                    let prevText = babe.lastIterationResults[0]["conversation"];
-                    document.getElementById(
-                        "text-last-iteration"
-                    ).innerText = prevText;
-                }
 
                 babe.conversation = [];
 
                 let next = $("#next");
                 let textInput = $("textarea");
                 next.on("click", function() {
-                    var RT = Date.now() - startingTime; // measure RT before anything else
-                    var trial_data = {
-                        trial_type: config.trial_type,
-                        trial_number: CT + 1,
-                        response: textInput.val().trim(),
-                        RT: RT
-                    };
                     babe.gameChannel.push("new_msg", {
-                           message: `${babe.variant}: ${trial_data.response}`
+                           message: `${babe.variant}: ${textInput.val().trim()}`
                     });
+                });
 
-                    //babe.trial_data.push(trial_data);
-                    //babe.findNextView();
+                let end = $("#end");
+                end.on("click", function() {
+                  // Note that we can only record the reaction time of the guy who actively ended this round. Other interactive experiments might have different requirements though.
+                  const RT = Date.now() - startingTime;
+                  const trial_data = {
+                      trial_type: config.trial_type,
+                      trial_number: CT + 1,
+                      // Better put them into one single string.
+                      conversation: babe.conversation.join("\n"),
+                      RT: RT
+                      };
+                      babe.gameChannel.push("end_game", {
+                          prev_round_trial_data: trial_data
+                      });
                 });
                 startingTime = Date.now();
             },

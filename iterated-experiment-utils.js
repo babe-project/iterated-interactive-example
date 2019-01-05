@@ -231,7 +231,6 @@ const iteratedExperimentUtils = {
         };
 
         const flattenData = function(data) {
-            console.log(data);
             var trials = data.trials;
             delete data.trials;
 

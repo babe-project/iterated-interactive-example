@@ -50,8 +50,26 @@ const lobby_interactive = iteratedExperimentViews.interactiveExperimentLobby({
     name: "lobby",
     trials: 1,
     title: "Lobby_interactive",
+    number_players: 2,
     text: "Waiting for other participants"
 });
+
+const dialogue = iteratedExperimentViews.dialogueView({
+    name: "dialogue",
+    trials: 1,
+    title: "Dialogue",
+    instructions: `
+    Try to remember the following dialogue as good as possible.
+    Afterwards you will have to recreate the dialogue together with another participant.
+    `,
+    text:`
+    1: Hallo
+    2: How are you?
+    1: Fine
+    2: Bye
+    `,
+    buttonText: "Start the experiment"
+})
 
 const trial = iteratedExperimentViews.trialView({
     name: "trial",

@@ -11,9 +11,9 @@ $("document").ready(function() {
     babeInit({
         // views_seq: [init, intro, instructions, lobby, game, thanks],
         // views_seq: [init, intro, instructions, lobby_iterated, lobby_interactive, trial, pos_test_view, thanks],
-        views_seq: [init, intro, instructions, lobby_iterated, lobby_interactive, trial, thanks],
+        views_seq: [init, intro, instructions, lobby_iterated, lobby_interactive, dialogue, trial, thanks],
         deploy: {
-            experimentID: "56",
+            experimentID: "57",
             // experimentID: "15",
             serverAppURL:
                 "https://babe-demo.herokuapp.com/api/submit_experiment/",
