@@ -20,7 +20,7 @@ $("document").ready(function() {
             // serverAppURL: "http://localhost:4000/api/submit_experiment/",
             socketURL: "wss://babe-demo.herokuapp.com/socket",
             // socketURL: "ws://localhost:4000/socket",
-            deployMethod: "debug",
+            deployMethod: "directLink",
             contact_email: "YOUREMAIL@wherelifeisgreat.you",
             prolificURL:
                 "https://app.prolific.ac/submissions/complete?cc=EXAMPLE1234"

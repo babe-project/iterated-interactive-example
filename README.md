@@ -1,6 +1,6 @@
 Demo of iterated-interactive experiments with \_babe.
 
-The example corresponds to the experiment with ID 51 on https://babe-demo.herokuapp.com
+The example corresponds to the experiment with ID 58 on https://babe-demo.herokuapp.com
 
 First, clone the repo and run `npm install` in the folder.
 
@@ -10,12 +10,12 @@ Under the new server structure for complex experiments, each participant is assi
 2. `chain-nr`
 3. `realization-nr`
 
-In this experiment, there are two variants, three chains, and 10 realizations for each chain.
+In this experiment, there are two variants, two chains, and 10 realizations for each chain.
 
 Each time you open `index.html` in your browser, you will join the experiment as a new participant.
 
 The participants `<X, chain-nr, realization-nr + 1>` waits on the results of the participants `<X, chain-nr, realization-nr>`.
 
-Therefore, assuming nobody submitted any results yet, the seventh tab you open should have you wait in the lobby, until you submit the result in the first tab, by which time the results will be shown to the fourth participant.
+The first two participants will perform the first realization of the first chain, the third and forth participant will perform the first realization of the second chain. The fifth and sixth participant will perform the second realization of the first chain, but only after the first two participants have finished.
 
-For demonstration sake, the trituple for each participant is explicitly displayed at the trial view.
+The trituple for each participant is written to the console.
