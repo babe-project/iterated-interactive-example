@@ -228,6 +228,8 @@ const iteratedExperimentViews = {
                             window.alert(
                                 "Sorry. Somebody just left this interactive experiment halfway through and thus it can't be finished! Please contact us to still be reimbursed for your time."
                             );
+                        babe.participantChannel.leave();
+                        babe.gameChannel.leave();
                             // TODO: Figure out what exactly to do when this happens.
                             // We might not want to submit the results. If we submit, we'd also need to make sure that the participant who dropped out's ExperimentStatus is also marked as "completed" correctly.
                             // babe.submission = colorReferenceUtils.babeSubmitWithSocket(
