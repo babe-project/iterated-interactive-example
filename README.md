@@ -1,5 +1,7 @@
 Demo of iterated-interactive experiments with \_babe.
 
+Online demo available [here](https://iterated-interactive-example.netlify.com/). You have too open the link twice, because it is an experiment for two persons.
+
 The example corresponds to the experiment with ID 60 on https://babe-demo.herokuapp.com
 
 First, clone the repo and run `npm install` in the folder.
